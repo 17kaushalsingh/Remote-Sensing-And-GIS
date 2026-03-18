@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GIS_Assign8</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #1f2937;
+      background: #ffffff;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 16px auto;
+    }
+    pre, code {
+      background: #f3f4f6;
+    }
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+    code {
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+<h4>Remote Sensing and GIS</h4>
+<h4>Assignment 8</h4>
+<h4>Kaushal Singh [CH22BTECH11018]</h4>
+<h2>3. Georeferencing</h2>
+<p>This part of the assignment focused on georeferencing, which means assigning correct real-world coordinates to a scanned map or raster image. This process is important because an old map image by itself cannot be used for spatial analysis until it is aligned with a coordinate system. In this exercise, I worked with a historical map of Bangalore and aligned it with a modern basemap in QGIS.</p>
+<h3>3.1 Using Basemaps</h3>
+<p>I started by loading a basemap through the <strong>QuickMapServices</strong> plugin. To do this, I installed the contributed service pack and added the <strong>OSM Standard</strong> basemap. This layer provided a georeferenced modern reference map, which was necessary for identifying common locations between the historical image and present-day Bangalore.</p>
+<p>Once the basemap was loaded, I confirmed that it was displayed in <strong>EPSG:3857</strong>, which is the standard web map coordinate system used by many online map services. This created the reference environment required for georeferencing the scanned image.</p>
+<p><img alt="OSM basemap loaded for Bangalore" src="image 0.png" /></p>
+<h3>Challenge 3.1.1</h3>
+<p><strong>Load the Dark Matter basemap by CartoDB. This is a minimalist basemap that renders OpenStreetMap data in a dark background.</strong></p>
+<p>To complete this challenge, I opened <strong>QuickMapServices</strong> and selected the <strong>CartoDB Dark Matter</strong> basemap. This added a dark-themed reference layer to the project.</p>
+<p>The Dark Matter basemap is useful because its simple dark background makes other layers stand out more clearly. It is especially effective when bright symbols or labels need to be highlighted on top of the map.</p>
+<p><img alt="Dark Matter basemap view" src="image 1.png" /></p>
+<h3>3.2 Using the Georeferencer</h3>
+<p>In this section, I used the <strong>Georeferencer</strong> tool in QGIS to align the scanned map with the basemap. I opened the raster image <strong>Bangalore_1924.png</strong> and identified visible locations that were common to both the old map and the modern basemap. These matching locations were added as <strong>Ground Control Points (GCPs)</strong>. For each GCP, I first clicked a location on the scanned image and then used the <strong>From Map Canvas</strong> option to pick the matching coordinate from the basemap.</p>
+<p>I collected several such points, mainly at road intersections, corners, and other easily identifiable places. Since the transformation method being used was <strong>Polynomial 2</strong>, at least six GCPs were required. I also reviewed the GCP table to inspect the residual error values for each point.</p>
+<p>If any point had a high error, I adjusted or removed it. When the point set became satisfactory, I opened the transformation settings and selected <strong>Polynomial 2</strong> as the transformation type, <strong>Nearest Neighbour</strong> as the resampling method, and <strong>EPSG:3857</strong> as the target CRS. The output was saved as <strong>Banglore_1924_modified.tif</strong>, <strong>LZW compression</strong> was selected, and I enabled both <strong>Save GCP points</strong> and <strong>Load in QGIS when done</strong>.</p>
+<p>Finally, I ran the georeferencing process. The transformed raster was loaded back into QGIS, where it aligned over the modern basemap. This confirmed that the old map had been successfully georeferenced.</p>
+<p><img alt="Georeferencing workflow and raster alignment" src="image 2.png" /></p>
+<p><img alt="Georeferencer window with control points" src="image 3.png" /></p>
+<h3>Challenge 3.2.1</h3>
+<p><strong>In this exercise we used the Polynomial 2 technique. For datasets that require more aggressive transformation, you can use the Thin Plate Spline algorithm. This method is also known as Rubber Sheeting. Change the transformation setting to use Thin Plate Spline and run the georeferencer again. Compare the output with the previous result.</strong></p>
+<p>For this challenge, I changed the transformation method from <strong>Polynomial 2</strong> to <strong>Thin Plate Spline</strong> and ran the georeferencer again. Thin Plate Spline is more flexible because it can stretch and bend the raster more strongly to fit the control points.</p>
+<p>When I compared the output with the earlier result, I observed that the Thin Plate Spline version adjusted the map more aggressively in local areas. This can be helpful when the old map contains irregular distortions, although it may also introduce stronger warping in some parts of the image.</p>
+<p><img alt="Georeferenced historical map over basemap" src="image 4.png" /></p>
+<h2>4. Data Editing</h2>
+<p>This section was about creating and editing vector data. Using the georeferenced historical Bangalore map, I digitized old lake boundaries and recorded their present condition. The aim was to create a clean polygon layer and attach useful attributes to each feature.</p>
+<h3>4.1 Attribute Forms</h3>
+<p>I opened the prepared QGIS project and created a new <strong>GeoPackage</strong> layer named <strong>banglore_lakes</strong>. The geometry type was set to <strong>MultiPolygon</strong> because the task involved digitizing lake boundaries as polygon features. I kept the default <strong>EPSG:4326</strong> coordinate system and then added two custom fields: <strong>name</strong> as text with a maximum length of <strong>50</strong>, and <strong>status</strong> as an integer field.</p>
+<p>After creating the layer, I checked its attribute table to confirm that the fields had been added correctly. The <strong>fid</strong> field was already present because GeoPackage automatically maintains a unique ID for each feature.</p>
+<p>Next, I configured the attribute form for the <strong>status</strong> field. I changed its widget type to <strong>Value Map</strong>, which allowed me to create a drop-down menu with fixed categories. I entered the values as:</p>
+<ul>
+<li><code>1</code> for <strong>Healthy</strong></li>
+<li><code>2</code> for <strong>Partially Lost</strong></li>
+<li><code>3</code> for <strong>Lost</strong></li>
+</ul>
+<p>I also made the <strong>status</strong> field mandatory by enabling <strong>Not null</strong> and <strong>Enforce not null constraint</strong>. This ensured that every digitized lake would have a proper status value.</p>
+<p><img alt="Attribute form setup for lake layer" src="image 5.png" /></p>
+<h3>Challenge 4.1.1</h3>
+<p><strong>The fid column contains auto-increment unique id for each feature. The GeoPackage format requires this integer field to maintain data integrity. Manually overriding this id to a different value can cause data corruption. Edit the attribute form for the fid field so that it is not user-editable.</strong></p>
+<p>To complete this task, I opened the layer properties and edited the attribute form settings for the <strong>fid</strong> field. I changed the field configuration so that it would no longer be editable by the user in the form.</p>
+<p>This is important because the <strong>fid</strong> value is automatically managed by GeoPackage. Preventing manual editing protects the dataset from accidental errors and helps maintain the integrity of the feature IDs.</p>
+<h3>4.2 Digitizing Polygons</h3>
+<p>Before digitizing, I enabled the <strong>Snapping Toolbar</strong> so that vertices could be placed more accurately. This helps avoid geometry mistakes and makes polygon boundaries cleaner.</p>
+<p>I then switched on editing for the <strong>banglore_lakes</strong> layer and used the <strong>Add Polygon Feature</strong> tool to trace the lake boundaries visible in the historical raster. While digitizing, I compared the old map with the modern <strong>OSM Standard</strong> basemap so I could identify each waterbody and decide whether it was still present, partially lost, or completely lost.</p>
+<p><img alt="Digitized lake polygons" src="image 6.png" /></p>
+<p>After drawing each polygon, QGIS opened the attribute form. I entered the lake name wherever it was available and selected the correct <strong>status</strong> from the drop-down list. If the name was not visible, I left that field blank and only filled the status value.</p>
+<p>I repeated this process for all the visible lakes and then saved the edits. When I checked the attribute table, the layer contained <strong>24 digitized features</strong>, each with an automatically assigned <strong>fid</strong> and the attributes I had entered during digitizing.</p>
+<p><img alt="Digitized lakes with labels and status" src="image 7.png" /></p>
+<p><img alt="Lake layer ready for styling" src="image 8.png" /></p>
+<h3>Challenge 4.2.1</h3>
+<p><strong>Style the layer based on the status column. This column has categorical values that can be used assign a different color to each waterbody.</strong></p>
+<p>To style the lakes, I used the <strong>Categorized</strong> renderer in the layer styling panel and selected the <strong>status</strong> field as the classification column. This allowed QGIS to assign different colors to each category automatically.</p>
+<p>As a result, the lakes were displayed in separate colors based on whether they were <strong>Healthy</strong>, <strong>Partially Lost</strong>, or <strong>Lost</strong>. This made the final map easier to interpret because the condition of each waterbody could be understood at a glance.</p>
+<p><img alt="Categorized lake status map" src="image 9.png" /></p>
+<h2>5. Geoprocessing</h2>
+<p>In this part of the assignment, I performed a spatial analysis workflow to estimate how many people in Bangalore live within 1 kilometer of a metro station. This required downloading station data, reprojecting layers, creating a buffer, and then using zonal statistics with a population raster.</p>
+<h3>5.1 Download OpenStreetMap Data</h3>
+<p>I first loaded the <strong>bangalore.json</strong> city boundary file into QGIS. After that, I used the <strong>QuickOSM</strong> plugin to query OpenStreetMap data for railway stations in Bangalore. I entered <strong>railway</strong> as the key and <strong>station</strong> as the value, while restricting the query to Bangalore. In the advanced options, I kept only <strong>Node</strong> and <strong>Points</strong> checked so the query returned point features.</p>
+<p>The resulting layer included different kinds of railway stations, so I applied a filter to keep only those operated by <strong>Bangalore Metro Rail Corporation Limited</strong>. This left only the metro stations needed for the analysis.</p>
+<p>Since the downloaded layer was temporary, I made it permanent and saved it as <strong>railway_station_Bangalore.gpkg</strong>. I also saved the project after this preprocessing step.</p>
+<p><img alt="Metro stations downloaded from OpenStreetMap" src="image 10.png" /></p>
+<h3>Challenge 5.1.1</h3>
+<p><strong>You will notice that the attribute table for the <code>railway_station_bangalore</code> layer has many columns. Open the attribute table and delete all the columns except the fid and osm_id columns.</strong></p>
+<p>I opened the attribute table and used the <strong>Delete Field</strong> tool to remove the unnecessary columns. I kept only <strong>fid</strong> and <strong>osm_id</strong>, since these were enough to identify the features.</p>
+<p>This cleanup made the layer simpler and easier to work with in the later steps of the analysis.</p>
+<h3>5.2 Reproject and Buffer</h3>
+<p>The metro station layer was originally in <strong>EPSG:4326</strong>, which uses degrees as units. Since the buffer distance had to be measured in kilometers, I first reprojected the station layer to <strong>EPSG:32643 - WGS 84 / UTM Zone 43N</strong>, which is more suitable for distance-based operations in Bangalore. The reprojected output was saved as <strong>metro_stations_reprojected.gpkg</strong>.</p>
+<p>After reprojection, I applied the <strong>Buffer</strong> tool with a distance of <strong>1 kilometer</strong> and enabled the <strong>Dissolve result</strong> option so that all station buffers merged into a single polygon. This output was saved as <strong>metro_stations_buffer.gpkg</strong>, and it created a layer representing all areas within 1 km of a metro station.</p>
+<p>To keep the project consistent with the other layers, I then reprojected the buffer layer back to <strong>EPSG:4326</strong> and saved it as <strong>metro_station_buffer_reprojected.gpkg</strong>. I removed the temporary intermediate layers so that only the final usable output remained in the project.</p>
+<p><img alt="Metro station buffer layer" src="image 11.png" /></p>
+<h3>Challenge 5.2.1</h3>
+<p><strong>Your data package contains a dataset called <code>bangalore_pubs.gpkg</code> with the location of all pubs within the city. Select all the pubs from the layer within 1km of a metro station.</strong></p>
+<p>To solve this challenge, I used the <strong>Select by Location</strong> tool from the Processing Toolbox. I selected the features from <strong>bangalore_pubs.gpkg</strong> that intersected the <strong>metro_station_buffer_reprojected</strong> layer.</p>
+<p>This selected all pubs located within the 1 km metro influence zone. The output helped identify places that are spatially close to metro access.</p>
+<h3>5.3 Calculate Zonal Statistics</h3>
+<p>In the final section, I added the raster <strong>bangalore_ppp_2020_constrained.tif</strong>, which contains gridded population values. Each pixel represents the estimated population for that area, so the raster can be used to calculate how many people live inside a given polygon.</p>
+<p>I used the <strong>Zonal Statistics</strong> tool with <strong>metro_station_buffer_reprojected</strong> as the input polygon layer and the population raster as the input raster. I selected only the <strong>Sum</strong> statistic, used <strong>population_</strong> as the output column prefix, and saved the output as <strong>metro_station_buffer_pop.gpkg</strong>.</p>
+<p>When I opened the attribute table of the result, I saw a new field called <strong>population_sum</strong>. This field stored the estimated total population living within the 1 km metro station buffer zone.</p>
+<p><img alt="Population raster with metro buffer overlay" src="image 12.png" /></p>
+<h3>Challenge 5.3.1</h3>
+<p><strong>Repeat the Zonal Statistics operation on the <code>bangalore</code> layer to calculate the city’s total population. Determine what percentage of the city population lives within 1km of a metro station.</strong></p>
+<p>I repeated the <strong>Zonal Statistics</strong> process using the <strong>bangalore</strong> city boundary layer so that I could calculate the total population of the city. This produced another <strong>population_sum</strong> value representing the full population inside the Bangalore boundary.</p>
+<p>After that, I compared the metro buffer population with the city total population using the formula:</p>
+<p><code>(population within 1 km of metro stations / total city population) × 100</code></p>
+<p>From the results, the metro buffer population was approximately <strong>3,465,910</strong>, while the total Bangalore population was approximately <strong>11,779,067</strong>. This means that about <strong>29.42%</strong> of the city’s population lives within <strong>1 km</strong> of a metro station.</p>
+<p><img alt="Population summary tables for buffer and city" src="image 13.png" /></p>
+</body>
+</html>
